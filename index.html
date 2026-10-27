@@ -28,6 +28,31 @@
                 box-shadow: none !important;
             }
         }
+
+        /* 遊戲專用樣式與霓虹特效 */
+        .neon-border {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+        .neon-text-pink {
+            text-shadow: 0 0 10px rgba(236, 72, 153, 0.8), 0 0 20px rgba(236, 72, 153, 0.4);
+        }
+        #gameCanvas {
+            background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+            touch-action: none;
+            display: block;
+        }
+        .arcade-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+        .arcade-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
     </style>
 </head>
 <body class="text-gray-800 antialiased min-h-screen flex flex-col justify-between">
@@ -42,9 +67,19 @@
                     <p class="text-xs text-indigo-200">學藝/午餐小老師專用管理面板</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-2 text-sm bg-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-500">
-                <i class="fa-regular fa-calendar-check text-yellow-300"></i>
-                <span id="current-date">載入中...</span>
+            
+            <div class="flex items-center space-x-3">
+                <!-- 🎮 打磚塊小遊戲彈出按鈕 -->
+                <button onclick="openGameModal()" 
+                   class="flex items-center space-x-2 text-sm bg-pink-600 hover:bg-pink-500 text-white font-medium px-3.5 py-1.5 rounded-lg border border-pink-400 shadow-sm transition duration-150">
+                    <i class="fa-solid fa-gamepad text-yellow-300"></i>
+                    <span>打磚塊小遊戲</span>
+                </button>
+
+                <div class="flex items-center space-x-2 text-sm bg-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-500">
+                    <i class="fa-regular fa-calendar-check text-yellow-300"></i>
+                    <span id="current-date">載入中...</span>
+                </div>
             </div>
         </div>
     </header>
@@ -286,13 +321,103 @@
         </div>
     </footer>
 
+    <!-- 🎮 內嵌打磚塊遊戲 Modal 彈窗 -->
+    <div id="gameModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl p-3 sm:p-5 shadow-2xl relative text-white flex flex-col gap-3">
+            
+            <!-- 彈窗關閉按鈕 -->
+            <button onclick="closeGameModal()" class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-sm shadow-lg z-30 transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- 遊戲 Header / HUD -->
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-800/80 p-3 rounded-xl border border-slate-700/60">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/50 flex items-center justify-center text-blue-400 font-bold text-lg neon-text">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base sm:text-lg tracking-wider text-white neon-text">NEON BREAKOUT</h3>
+                        <p class="text-[10px] text-slate-400">午餐小老師休閒打磚塊</p>
+                    </div>
+                </div>
+
+                <!-- 遊戲分數狀態 -->
+                <div class="flex items-center gap-3 text-xs font-mono">
+                    <div class="bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 text-center">
+                        <span class="text-[10px] text-slate-400 block">SCORE</span>
+                        <span id="scoreVal" class="text-amber-400 font-bold text-sm">0</span>
+                    </div>
+                    <div class="bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 text-center">
+                        <span class="text-[10px] text-slate-400 block">LIVES</span>
+                        <span id="livesVal" class="text-rose-400 font-bold text-sm">3</span>
+                    </div>
+                    <div class="bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 text-center">
+                        <span class="text-[10px] text-slate-400 block">LEVEL</span>
+                        <span id="levelVal" class="text-emerald-400 font-bold text-sm">1</span>
+                    </div>
+                </div>
+
+                <!-- 控制按鈕 -->
+                <div class="flex items-center gap-2">
+                    <button id="pauseBtn" onclick="togglePause()" class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-slate-200 transition text-xs">
+                        <i class="fa-solid fa-pause" id="pauseIcon"></i>
+                    </button>
+                    <button onclick="toggleMute()" id="soundBtn" class="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-slate-200 transition text-xs">
+                        <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 遊戲畫布核心區域 -->
+            <div class="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-slate-950 border border-blue-500/30 rounded-xl overflow-hidden neon-border shadow-inner flex items-center justify-center">
+                <canvas id="gameCanvas" class="w-full h-full"></canvas>
+
+                <!-- 開始畫面遮罩 -->
+                <div id="startScreen" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-600/20 border border-blue-500 flex items-center justify-center text-blue-400 text-2xl mb-3 neon-text">
+                        <i class="fa-solid fa-cube"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold tracking-wider text-white mb-2 neon-text">NEON BREAKOUT</h2>
+                    <p class="text-slate-400 max-w-sm text-xs sm:text-sm mb-6">
+                        摧毀所有磚塊，收集增益道具！支援鍵盤（A/D 或 左右方向鍵）與滑鼠操作。
+                    </p>
+                    <button onclick="startGame()" class="arcade-btn text-white font-bold px-6 py-3 rounded-xl text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-play"></i> 開始遊戲
+                    </button>
+                </div>
+
+                <!-- 暫停畫面 -->
+                <div id="pauseScreen" class="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 hidden">
+                    <h2 class="text-2xl font-bold text-white mb-4 neon-text">遊戲暫停</h2>
+                    <div class="flex flex-col gap-3 w-40">
+                        <button onclick="togglePause()" class="arcade-btn text-white font-bold py-2 rounded-lg text-sm">繼續遊戲</button>
+                        <button onclick="restartGame()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-lg text-sm border border-slate-700">重新開始</button>
+                    </div>
+                </div>
+
+                <!-- 遊戲結束畫面 -->
+                <div id="gameOverScreen" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 hidden">
+                    <h2 class="text-3xl font-extrabold text-rose-500 mb-2 neon-text-pink">遊戲結束</h2>
+                    <p class="text-slate-400 mb-4 text-xs">得分：<span id="finalScore" class="text-amber-400 font-bold font-mono text-base">0</span></p>
+                    <button onclick="restartGame()" class="arcade-btn text-white font-bold px-6 py-2.5 rounded-xl text-sm">再次挑戰</button>
+                </div>
+
+                <!-- 通關畫面 -->
+                <div id="victoryScreen" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20 hidden">
+                    <h2 id="victoryTitle" class="text-3xl font-extrabold text-emerald-400 mb-2">關卡完成！</h2>
+                    <button id="nextLevelBtn" onclick="nextLevel()" class="arcade-btn text-white font-bold px-6 py-2.5 rounded-xl text-sm mt-4">進入下一關</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- JavaScript 應用程式核心邏輯 -->
     <script>
         // -------------------------------------------------------------
-        // 1. 系統資料結構與初始化
+        // 1. 訂餐系統資料結構與初始化
         // -------------------------------------------------------------
-        
-        // 內建 5 項菜單資料 (依照需求)
         const MENU = [
             { id: 1, name: '排骨便當', price: 80, icon: 'fa-drumstick-bite', color: 'border-amber-500 text-amber-600' },
             { id: 2, name: '雞腿便當', price: 85, icon: 'fa-burger', color: 'border-orange-500 text-orange-600' },
@@ -301,14 +426,9 @@
             { id: 5, name: '貢丸湯',   price: 20, icon: 'fa-mug-hot', color: 'border-blue-500 text-blue-600' }
         ];
 
-        // 訂單狀態儲存物件：Key 為座號 (1~50)，Value 為菜單 ID (1~5)
-        // 例如： { 1: 2, 5: 1 } 表示 1 號點 2 號餐，5 號點 1 號餐
         let classOrders = {};
-
-        // 當前選取的餐點 ID (搭配點擊按鈕選取)
         let selectedItemId = null;
 
-        // 初始化
         window.addEventListener('DOMContentLoaded', () => {
             initDate();
             renderMenuCards();
@@ -317,7 +437,6 @@
             updateStatistics();
         });
 
-        // 初始化當前日期
         function initDate() {
             const now = new Date();
             const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
@@ -326,11 +445,7 @@
             document.getElementById('print-time').textContent = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
         }
 
-        // -------------------------------------------------------------
-        // 2. UI 渲染功能 (菜單與表單)
-        // -------------------------------------------------------------
-
-        // 渲染菜單卡片
+        // 2. 訂餐介面 UI 渲染
         function renderMenuCards() {
             const container = document.getElementById('menu-cards-container');
             container.innerHTML = MENU.map(item => `
@@ -348,7 +463,6 @@
             `).join('');
         }
 
-        // 渲染表單快速點選按鈕
         function renderQuickButtons() {
             const container = document.getElementById('quick-item-buttons');
             container.innerHTML = MENU.map(item => `
@@ -359,12 +473,10 @@
             `).join('');
         }
 
-        // 點擊快速選擇餐點
         function quickSelectMenu(itemId) {
             selectedItemId = itemId;
             document.getElementById('item-num').value = itemId;
             
-            // 更新按鈕高亮
             MENU.forEach(item => {
                 const btn = document.getElementById(`quick-btn-${item.id}`);
                 if (btn) {
@@ -377,11 +489,7 @@
             });
         }
 
-        // -------------------------------------------------------------
-        // 3. 驗證與訂單處理邏輯
-        // -------------------------------------------------------------
-
-        // 顯示提示訊息 (防呆警示)
+        // 3. 訂餐邏輯
         function showAlert(msg, isError = true) {
             const alertBox = document.getElementById('alert-message');
             alertBox.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'border-red-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
@@ -394,202 +502,114 @@
                 alertBox.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> <span>${msg}</span>`;
             }
 
-            // 3秒後自動隱藏
-            setTimeout(() => {
-                alertBox.classList.add('hidden');
-            }, 3500);
+            setTimeout(() => { alertBox.classList.add('hidden'); }, 3500);
         }
 
-        // 驗證單筆輸入
         function validateOrder(seat, itemId) {
-            if (isNaN(seat) || seat === null) {
-                return { valid: false, msg: '請輸入有效的座號數字！' };
-            }
-            
-            // 座號 0 屬於特殊結束指令
-            if (seat === 0) {
-                return { valid: true, isEndCommand: true };
-            }
-
-            if (seat < 1 || seat > 50) {
-                return { valid: false, msg: '座號不合法！範圍必須為 1 ~ 50 號。' };
-            }
-
-            if (isNaN(itemId) || itemId < 1 || itemId > 5) {
-                return { valid: false, msg: '餐點編號不合法！請輸入菜單範圍 (1 ~ 5)。' };
-            }
-
+            if (isNaN(seat) || seat === null) return { valid: false, msg: '請輸入有效的座號數字！' };
+            if (seat === 0) return { valid: true, isEndCommand: true };
+            if (seat < 1 || seat > 50) return { valid: false, msg: '座號不合法！範圍必須為 1 ~ 50 號。' };
+            if (isNaN(itemId) || itemId < 1 || itemId > 5) return { valid: false, msg: '餐點編號不合法！請輸入菜單範圍 (1 ~ 5)。' };
             return { valid: true, isEndCommand: false };
         }
 
-        // 處理單筆訂單提交
         function handleSingleOrderSubmit(e) {
             e.preventDefault();
             const seatInput = document.getElementById('seat-num');
             const itemInput = document.getElementById('item-num');
-
             const seat = parseInt(seatInput.value, 10);
             const itemId = parseInt(itemInput.value, 10);
 
-            // 進行驗證
             const result = validateOrder(seat, itemId);
+            if (!result.valid) { showAlert(result.msg, true); return; }
+            if (result.isEndCommand) { finishOrdering(); seatInput.value = ''; itemInput.value = ''; return; }
 
-            if (!result.valid) {
-                showAlert(result.msg, true);
-                return;
-            }
-
-            // 若座號為 0，代表結束登記
-            if (result.isEndCommand) {
-                finishOrdering();
-                seatInput.value = '';
-                itemInput.value = '';
-                return;
-            }
-
-            // 新增或更新訂單
             classOrders[seat] = itemId;
             const menuItem = MENU.find(m => m.id === itemId);
-            
             showAlert(`已成功登記：${seat} 號 - ${menuItem.name} ($${menuItem.price})`, false);
 
-            // 清空輸入框與重設狀態
-            seatInput.value = '';
-            itemInput.value = '';
-            selectedItemId = null;
+            seatInput.value = ''; itemInput.value = ''; selectedItemId = null;
             renderQuickButtons();
-
-            // 自動焦距在座號輸入框，方便小老師連續輸入
             seatInput.focus();
-
-            // 重新渲染與更新統計
             renderTables();
             updateStatistics();
         }
 
-        // 點擊「完成結算 (0)」按鈕
         function finishOrdering() {
             const count = Object.keys(classOrders).length;
             showAlert(`訂餐登記完成！全班共計 ${count} 筆訂單。`, false);
             switchTab('summary');
         }
 
-        // 處理多筆批次匯入
         function handleBulkOrderSubmit() {
             const rawText = document.getElementById('bulk-input').value.trim();
-            if (!rawText) {
-                showAlert('請先輸入批次訂餐資料！', true);
-                return;
-            }
+            if (!rawText) { showAlert('請先輸入批次訂餐資料！', true); return; }
 
-            // 分割符號包含：逗號、空白、換行、分號
             const entries = rawText.split(/[\n,\s;]+/);
-            let successCount = 0;
-            let errorEntries = [];
+            let successCount = 0; let errorEntries = [];
 
             entries.forEach(entry => {
                 if (!entry.trim()) return;
-                
-                // 解析格式 1-2 或 1:2
                 const parts = entry.split(/[-:]/);
                 if (parts.length === 2) {
                     const seat = parseInt(parts[0].trim(), 10);
                     const itemId = parseInt(parts[1].trim(), 10);
-
                     const validation = validateOrder(seat, itemId);
                     if (validation.valid && !validation.isEndCommand) {
                         classOrders[seat] = itemId;
                         successCount++;
-                    } else {
-                        errorEntries.push(entry);
-                    }
-                } else {
-                    errorEntries.push(entry);
-                }
+                    } else errorEntries.push(entry);
+                } else errorEntries.push(entry);
             });
 
-            if (successCount > 0) {
-                renderTables();
-                updateStatistics();
-                document.getElementById('bulk-input').value = '';
-            }
-
-            if (errorEntries.length > 0) {
-                showAlert(`已成功匯入 ${successCount} 筆。以下格式錯誤已被忽略：${errorEntries.join(', ')}`, true);
-            } else {
-                showAlert(`批次匯入成功！共新增/更新 ${successCount} 筆訂單。`, false);
-            }
+            if (successCount > 0) { renderTables(); updateStatistics(); document.getElementById('bulk-input').value = ''; }
+            if (errorEntries.length > 0) showAlert(`已成功匯入 ${successCount} 筆。格式錯誤已被忽略：${errorEntries.join(', ')}`, true);
+            else showAlert(`批次匯入成功！共新增/更新 ${successCount} 筆訂單。`, false);
         }
 
-        // 刪除單筆訂單
         function deleteOrder(seat) {
             delete classOrders[seat];
-            renderTables();
-            updateStatistics();
+            renderTables(); updateStatistics();
             showAlert(`已刪除 ${seat} 號的訂購記錄。`, false);
         }
 
-        // 清空所有訂單
         function clearAllOrders() {
             if (Object.keys(classOrders).length === 0) return;
-            
             if (confirm('確定要清空全班所有的訂餐記錄嗎？此動作無法復原。')) {
-                classOrders = {};
-                renderTables();
-                updateStatistics();
+                classOrders = {}; renderTables(); updateStatistics();
                 showAlert('已清空全班訂餐資料。', false);
             }
         }
 
-        // -------------------------------------------------------------
-        // 4. 結算報表與統計計算
-        // -------------------------------------------------------------
-
-        // 統計計算與更新頂部指標
         function updateStatistics() {
             const totalOrders = Object.keys(classOrders).length;
             const coveragePct = Math.round((totalOrders / 50) * 100);
-
             let totalPrice = 0;
             Object.values(classOrders).forEach(itemId => {
                 const item = MENU.find(m => m.id === itemId);
                 if (item) totalPrice += item.price;
             });
-
             document.getElementById('stat-total-orders').textContent = totalOrders;
             document.getElementById('stat-coverage').textContent = `${coveragePct}%`;
             document.getElementById('stat-seat-count').textContent = totalOrders;
             document.getElementById('stat-total-amount').textContent = `$${totalPrice}`;
         }
 
-        // 渲染統計表與明細表
         function renderTables() {
-            // 1. 渲染 Summary Table (品項統計表)
             const summaryBody = document.getElementById('summary-table-body');
-            let summaryHTML = '';
-            let totalQtySum = 0;
-            let totalPriceSum = 0;
+            let summaryHTML = ''; let totalQtySum = 0; let totalPriceSum = 0;
 
             MENU.forEach(item => {
-                // 計算此餐點訂購總數
                 const qty = Object.values(classOrders).filter(id => id === item.id).length;
                 const subtotal = qty * item.price;
-
-                totalQtySum += qty;
-                totalPriceSum += subtotal;
+                totalQtySum += qty; totalPriceSum += subtotal;
 
                 summaryHTML += `
                     <tr class="${qty > 0 ? 'bg-white' : 'bg-gray-50/50 opacity-60'} hover:bg-indigo-50/30 transition">
                         <td class="py-3 px-3 font-mono font-bold text-gray-500">#${item.id}</td>
-                        <td class="py-3 px-3 font-medium text-gray-800">
-                            <i class="fa-solid ${item.icon} mr-1.5 text-gray-400"></i> ${item.name}
-                        </td>
+                        <td class="py-3 px-3 font-medium text-gray-800"><i class="fa-solid ${item.icon} mr-1.5 text-gray-400"></i> ${item.name}</td>
                         <td class="py-3 px-3 text-right text-gray-600 font-mono">$${item.price}</td>
-                        <td class="py-3 px-3 text-center">
-                            <span class="inline-block px-2.5 py-0.5 rounded-full font-bold text-xs ${qty > 0 ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-400'}">
-                                ${qty}
-                            </span>
-                        </td>
+                        <td class="py-3 px-3 text-center"><span class="inline-block px-2.5 py-0.5 rounded-full font-bold text-xs ${qty > 0 ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-400'}">${qty}</span></td>
                         <td class="py-3 px-3 text-right font-bold font-mono ${subtotal > 0 ? 'text-gray-900' : 'text-gray-400'}">$${subtotal}</td>
                     </tr>
                 `;
@@ -599,12 +619,9 @@
             document.getElementById('summary-total-qty').textContent = totalQtySum;
             document.getElementById('summary-total-price').textContent = `$${totalPriceSum}`;
 
-            // 2. 渲染 Details Table (座號明細表 1~50 號全列)
             const detailsBody = document.getElementById('details-table-body');
             const printSeatDetails = document.getElementById('print-seat-details');
-            
-            let detailsHTML = '';
-            let printDetailsHTML = '';
+            let detailsHTML = ''; let printDetailsHTML = '';
 
             for (let seat = 1; seat <= 50; seat++) {
                 const itemId = classOrders[seat];
@@ -617,21 +634,12 @@
                             <td class="py-2.5 px-4 font-medium text-gray-800">${item.name}</td>
                             <td class="py-2.5 px-4 text-right font-mono font-semibold text-gray-700">$${item.price}</td>
                             <td class="py-2.5 px-4 text-center no-print">
-                                <button onclick="deleteOrder(${seat})" class="text-rose-500 hover:text-rose-700 p-1 text-xs" title="刪除訂單">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
+                                <button onclick="deleteOrder(${seat})" class="text-rose-500 hover:text-rose-700 p-1 text-xs" title="刪除訂單"><i class="fa-solid fa-trash-can"></i></button>
                             </td>
                         </tr>
                     `;
-
-                    printDetailsHTML += `
-                        <div class="flex justify-between border-b border-gray-200 py-1">
-                            <span class="font-bold">${seat} 號:</span>
-                            <span>${item.name} ($${item.price})</span>
-                        </div>
-                    `;
+                    printDetailsHTML += `<div class="flex justify-between border-b border-gray-200 py-1"><span class="font-bold">${seat} 號:</span><span>${item.name} ($${item.price})</span></div>`;
                 } else {
-                    // 未訂餐的座號
                     detailsHTML += `
                         <tr class="bg-gray-50/40 opacity-50">
                             <td class="py-2.5 px-4 font-mono text-gray-400">${seat} 號</td>
@@ -647,7 +655,6 @@
             printSeatDetails.innerHTML = printDetailsHTML || '<p class="text-gray-500 col-span-2">尚無訂餐資料</p>';
         }
 
-        // 切換頁籤 (統計表 vs 座號明細)
         function switchTab(tabName) {
             const summaryTab = document.getElementById('tab-summary');
             const detailsTab = document.getElementById('tab-details');
@@ -655,16 +662,232 @@
             const btnDetails = document.getElementById('tab-btn-details');
 
             if (tabName === 'summary') {
-                summaryTab.classList.remove('hidden');
-                detailsTab.classList.add('hidden');
+                summaryTab.classList.remove('hidden'); detailsTab.classList.add('hidden');
                 btnSummary.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white transition";
                 btnDetails.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition";
             } else {
-                summaryTab.classList.add('hidden');
-                detailsTab.classList.remove('hidden');
+                summaryTab.classList.add('hidden'); detailsTab.classList.remove('hidden');
                 btnSummary.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition";
                 btnDetails.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white transition";
             }
+        }
+
+        // -------------------------------------------------------------
+        // 4. 內嵌打磚塊遊戲引擎 (Neon Breakout Engine)
+        // -------------------------------------------------------------
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const VIRTUAL_WIDTH = 800;
+        const VIRTUAL_HEIGHT = 600;
+
+        let gameState = 'START';
+        let score = 0, lives = 3, level = 1, soundEnabled = true;
+        let animationFrameId = null;
+
+        let paddle = { width: 120, height: 16, x: 340, y: 560, speed: 9, targetX: 340 };
+        let balls = [];
+        let bricks = [];
+        let powerUps = [];
+        let particles = [];
+
+        const brickRowCount = 5, brickColumnCount = 8, brickHeight = 24, brickPadding = 12, brickOffsetTop = 60, brickOffsetLeft = 55;
+        const brickColors = [
+            { border: '#f43f5e', fill: '#fda4af', points: 50 },
+            { border: '#f97316', fill: '#fdba74', points: 40 },
+            { border: '#eab308', fill: '#fde047', points: 30 },
+            { border: '#10b981', fill: '#6ee7b7', points: 20 },
+            { border: '#3b82f6', fill: '#93c5fd', points: 10 }
+        ];
+
+        function openGameModal() {
+            document.getElementById('gameModal').classList.remove('hidden');
+            resizeGameCanvas();
+            if (gameState === 'START') {
+                initBricks();
+                drawGame();
+            }
+        }
+
+        function closeGameModal() {
+            document.getElementById('gameModal').classList.add('hidden');
+            if (gameState === 'PLAYING') togglePause();
+        }
+
+        function resizeGameCanvas() {
+            canvas.width = VIRTUAL_WIDTH;
+            canvas.height = VIRTUAL_HEIGHT;
+        }
+
+        function createBall(x, y, dx, dy) {
+            return { x: x || paddle.x + paddle.width / 2, y: y || paddle.y - 12, radius: 8, dx: dx !== undefined ? dx : 4, dy: dy !== undefined ? dy : -4 };
+        }
+
+        function initBricks() {
+            bricks = [];
+            const brickWidth = (VIRTUAL_WIDTH - (brickOffsetLeft * 2) - (brickColumnCount - 1) * brickPadding) / brickColumnCount;
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRowCount; r++) {
+                    bricks[c][r] = {
+                        x: c * (brickWidth + brickPadding) + brickOffsetLeft,
+                        y: r * (brickHeight + brickPadding) + brickOffsetTop,
+                        status: 1, color: brickColors[r % brickColors.length],
+                        hasPowerUp: Math.random() < 0.2
+                    };
+                }
+            }
+        }
+
+        function startGame() {
+            score = 0; lives = 3; level = 1;
+            updateGameHUD();
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.add('hidden');
+            resetGameLevel();
+            gameState = 'PLAYING';
+            if (!animationFrameId) gameLoop();
+        }
+
+        function resetGameLevel() {
+            paddle.width = 120;
+            paddle.x = VIRTUAL_WIDTH / 2 - 60; paddle.targetX = paddle.x;
+            balls = [createBall()]; powerUps = []; particles = [];
+            initBricks();
+        }
+
+        function restartGame() { startGame(); }
+        function nextLevel() {
+            level++; updateGameHUD();
+            document.getElementById('victoryScreen').classList.add('hidden');
+            resetGameLevel(); gameState = 'PLAYING';
+        }
+
+        function togglePause() {
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                document.getElementById('pauseScreen').classList.remove('hidden');
+                document.getElementById('pauseIcon').className = "fa-solid fa-play";
+            } else if (gameState === 'PAUSED') {
+                gameState = 'PLAYING';
+                document.getElementById('pauseScreen').classList.add('hidden');
+                document.getElementById('pauseIcon').className = "fa-solid fa-pause";
+            }
+        }
+
+        function toggleMute() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundIcon').className = soundEnabled ? "fa-solid fa-volume-high" : "fa-solid fa-volume-xmark text-rose-400";
+        }
+
+        function updateGameHUD() {
+            document.getElementById('scoreVal').textContent = score;
+            document.getElementById('livesVal').textContent = lives;
+            document.getElementById('levelVal').textContent = level;
+        }
+
+        let rightPressed = false, leftPressed = false;
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') rightPressed = true;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') leftPressed = true;
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') rightPressed = false;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') leftPressed = false;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameState !== 'PLAYING') return;
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * (VIRTUAL_WIDTH / rect.width);
+            paddle.targetX = mouseX - paddle.width / 2;
+        });
+
+        function updateGame() {
+            if (gameState !== 'PLAYING') return;
+
+            if (rightPressed) paddle.targetX += paddle.speed * 1.5;
+            if (leftPressed) paddle.targetX -= paddle.speed * 1.5;
+            paddle.targetX = Math.max(10, Math.min(VIRTUAL_WIDTH - paddle.width - 10, paddle.targetX));
+            paddle.x += (paddle.targetX - paddle.x) * 0.3;
+
+            const brickWidth = (VIRTUAL_WIDTH - (brickOffsetLeft * 2) - (brickColumnCount - 1) * brickPadding) / brickColumnCount;
+
+            for (let i = balls.length - 1; i >= 0; i--) {
+                let ball = balls[i];
+                ball.x += ball.dx; ball.y += ball.dy;
+
+                if (ball.x - ball.radius < 0 || ball.x + ball.radius > VIRTUAL_WIDTH) ball.dx = -ball.dx;
+                if (ball.y - ball.radius < 0) ball.dy = -ball.dy;
+
+                if (ball.y + ball.radius >= paddle.y && ball.x >= paddle.x && ball.x <= paddle.x + paddle.width) {
+                    ball.dy = -Math.abs(ball.dy);
+                }
+
+                if (ball.y > VIRTUAL_HEIGHT) {
+                    balls.splice(i, 1);
+                    if (balls.length === 0) {
+                        lives--; updateGameHUD();
+                        if (lives <= 0) {
+                            gameState = 'GAMEOVER';
+                            document.getElementById('finalScore').textContent = score;
+                            document.getElementById('gameOverScreen').classList.remove('hidden');
+                        } else {
+                            balls.push(createBall());
+                        }
+                    }
+                }
+
+                let cleared = true;
+                for (let c = 0; c < brickColumnCount; c++) {
+                    for (let r = 0; r < brickRowCount; r++) {
+                        let b = bricks[c][r];
+                        if (b.status === 1) {
+                            cleared = false;
+                            if (ball.x > b.x && ball.x < b.x + brickWidth && ball.y > b.y && ball.y < b.y + brickHeight) {
+                                ball.dy = -ball.dy; b.status = 0; score += b.color.points;
+                                updateGameHUD();
+                            }
+                        }
+                    }
+                }
+
+                if (cleared) {
+                    gameState = 'VICTORY';
+                    document.getElementById('victoryScreen').classList.remove('hidden');
+                }
+            }
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+            const brickWidth = (VIRTUAL_WIDTH - (brickOffsetLeft * 2) - (brickColumnCount - 1) * brickPadding) / brickColumnCount;
+
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    let b = bricks[c][r];
+                    if (b.status === 1) {
+                        ctx.fillStyle = b.color.fill;
+                        ctx.fillRect(b.x, b.y, brickWidth, brickHeight);
+                    }
+                }
+            }
+
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+
+            for (let ball of balls) {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#60a5fa';
+                ctx.fill();
+            }
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            animationFrameId = requestAnimationFrame(gameLoop);
         }
     </script>
 </body>
